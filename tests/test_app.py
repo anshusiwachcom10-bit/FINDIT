@@ -4,6 +4,8 @@ import tempfile
 import unittest
 from io import BytesIO
 
+os.environ.setdefault("SECRET_KEY", "pytest-only-not-a-secret")
+
 from app import _get_item, _row_dict, _store_matches_for_item, create_app
 from database.database import query_db
 

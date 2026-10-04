@@ -49,7 +49,8 @@ Scores are rounded to whole numbers. Results below 50 are not shown as potential
 - Werkzeug (included as a Flask dependency; used for password hashing and uploaded-file handling)
 - Server-rendered HTML templates with Jinja
 - HTML, CSS, vanilla JavaScript, and SVG assets
-- pytest (the tests use Python's `unittest` assertions and are run by pytest)
+- pytest (development/test dependency; tests use Python's `unittest` assertions)
+- Gunicorn (production WSGI server)
 
 ## Project Structure
 
@@ -57,6 +58,8 @@ Scores are rounded to whole numbers. Results below 50 are not shown as potential
 FINDIT/
 ├── app.py                  # Flask application, routes, and JSON endpoints
 ├── config.py               # Development, production, and testing configuration
+├── requirements.txt        # Production Python dependencies
+├── requirements-dev.txt    # Test/development dependencies
 ├── database/
 │   ├── database.py         # SQLite connection and query helpers
 │   ├── matching.py        # Deterministic report-matching algorithm
@@ -85,7 +88,7 @@ Python and `pip` are required. From the project directory, create and activate a
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install Flask pytest
+python -m pip install -r requirements-dev.txt
 ```
 
 On macOS or Linux, activate the environment with:
@@ -94,7 +97,7 @@ On macOS or Linux, activate the environment with:
 source .venv/bin/activate
 ```
 
-There is not currently a dependency manifest in the repository. Flask is the application's external runtime dependency; pytest is used to run the test suite.
+`requirements.txt` lists the production dependencies. `requirements-dev.txt` includes those dependencies and pytest for running the test suite.
 
 ## Environment Variables
 
@@ -132,6 +135,15 @@ python -m pytest -q
 
 The tests cover report flows, account behavior, API interactions, uploads, and matching scores/reasons. Test runs use temporary databases and upload directories.
 
+## Deploying on Render
+
+Set `SECRET_KEY` as a private environment variable in the Render service settings. Use these commands:
+
+- **Build Command:** `pip install -r requirements.txt`
+- **Start Command:** `gunicorn --bind 0.0.0.0:$PORT app:app`
+
+The application currently uses a local SQLite database and local image storage. These are not durable across Render deployments or instances; configure persistent or managed storage before relying on production user data.
+
 ## Screenshots
 
 No screenshots are currently included. Add screenshots of the application here before publication, making sure they contain no real account information, report data, or uploaded personal images.
@@ -147,8 +159,7 @@ No screenshots are currently included. Add screenshots of the application here b
 
 ## Future Improvements
 
-- Add a dependency manifest and documented production deployment configuration.
-- Configure database and upload storage for production and support managed storage options.
+- Configure durable database and upload storage for production, including managed storage options.
 - Add moderation and clearer privacy controls for reports and images.
 - Evaluate and tune the matching heuristic using representative, privacy-safe test data.
 - Expand claim and handoff workflows and improve accessibility and localization.
