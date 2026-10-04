@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FINDIT helps people report, discover, and reconnect with lost items in a safe and thoughtful way.">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}FINDIT | Lost something? Let's FINDIT.{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/findit-mark.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=12">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=12">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=18">
+</head>
+<body class="{{ 'home-page' if request.path == '/' else '' }}">
+    <header class="site-header">
+        <div class="container nav-shell">
+            <a href="{{ url_for('index') }}" class="brand" aria-label="FINDIT home">
+                <span class="brand-mark">F</span>
+                <span class="brand-wordmark">
+                    <strong>FINDIT</strong>
+                    <small>Lost &amp; Found Matcher</small>
+                </span>
+            </a>
+
+            <nav class="main-nav" aria-label="Main navigation">
+                <a href="{{ url_for('index') }}" class="nav-link {{ 'active' if request.path == '/' else '' }}">Home</a>
+                <a href="{{ url_for('lost_items') }}" class="nav-link {{ 'active' if request.path in ['/find-items', '/lost', '/found', '/found-items'] else '' }}">Find Items</a>
+                <a href="{{ url_for('report_lost') }}" class="nav-link {{ 'active' if request.path == '/report/lost' else '' }}">Report Lost</a>
+                <a href="{{ url_for('report_found') }}" class="nav-link {{ 'active' if request.path == '/report/found' else '' }}">Report Found</a>
+                <a href="{{ url_for('how_it_works') }}" class="nav-link {{ 'active' if request.path == '/how-it-works' else '' }}">How It Works</a>
+                <a href="{{ url_for('community') }}" class="nav-link {{ 'active' if request.path in ['/community', '/about'] else '' }}">About</a>
+                {% if current_user %}
+                    <a href="{{ url_for('notifications') }}" class="nav-link nav-mobile-link">Notifications</a>
+                    <a href="{{ url_for('profile') }}" class="nav-link nav-mobile-link">Profile</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link nav-mobile-link">Log in</a>
+                    <a href="{{ url_for('signup') }}" class="nav-link nav-mobile-link">Create account</a>
+                {% endif %}
+            </nav>
+
+            <div class="nav-actions">
+                <a href="{{ url_for('lost_items') }}" class="nav-icon search-link" aria-label="Search items">⌕</a>
+                {% if current_user %}
+                    <a href="{{ url_for('notifications') }}" class="nav-icon notification-link">Updates</a>
+                    <a href="{{ url_for('profile') }}" class="profile-pill">{{ current_user['name'] }}</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-icon notification-link">Log in</a>
+                    <a href="{{ url_for('signup') }}" class="profile-pill">Join FINDIT</a>
+                {% endif %}
+            </div>
+
+            <button class="mobile-menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="site-main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container flash-messages" role="status" aria-live="polite">
+                    {% for category, message in messages %}
+                        <p class="flash-message {{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer {{ 'home-footer' if request.path == '/' else '' }}">
+        {% if request.path == '/' %}
+        <div class="container home-footer-grid">
+            <div class="home-footer-brand">
+                <a href="{{ url_for('index') }}" class="brand footer-brand-link" aria-label="FINDIT home">
+                    <span class="brand-mark">F</span>
+                    <span class="brand-wordmark">
+                        <strong>FINDIT</strong>
+                        <small>Lost &amp; Found Matcher</small>
+                    </span>
+                </a>
+                <p>Lost things. Found people. A warmer way to reconnect.</p>
+            </div>
+            <div class="home-footer-column">
+                <h2>Explore</h2>
+                <a href="{{ url_for('lost_items') }}">Find Items</a>
+                <a href="{{ url_for('report_lost') }}">Report Lost</a>
+                <a href="{{ url_for('report_found') }}">Report Found</a>
+                <a href="{{ url_for('how_it_works') }}">How It Works</a>
+                <a href="{{ url_for('community') }}">About</a>
+            </div>
+            <div class="home-footer-column">
+                <h2>Account</h2>
+                {% if current_user %}
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('profile') }}">Profile</a>
+                <a href="{{ url_for('matches') }}">Matches</a>
+                {% else %}
+                <a href="{{ url_for('login') }}">Log in</a>
+                <a href="{{ url_for('signup') }}">Create account</a>
+                {% endif %}
+            </div>
+            <div class="home-footer-community">
+                <h2>Stay connected</h2>
+                <p>Help someone find what they lost.</p>
+                <a href="{{ url_for('report_found') }}" class="home-footer-report">Report a found item <span aria-hidden="true">→</span></a>
+            </div>
+        </div>
+        <div class="container footer-bottom home-footer-bottom">
+            <span>© 2026 FINDIT. All rights reserved.</span>
+            <span>Lost things. Found people.</span>
+        </div>
+        {% else %}
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <a href="{{ url_for('index') }}" class="brand footer-brand-link">
+                    <span class="brand-mark">F</span>
+                    <span class="brand-wordmark">
+                        <strong>FINDIT</strong>
+                    </span>
+                </a>
+                <p>Lost something? Let’s FINDIT is a warmer, safer way to reconnect people with the belongings they value most.</p>
+            </div>
+
+            <div class="footer-column">
+                <h4>Explore</h4>
+                <a href="{{ url_for('lost_items') }}">Find Items</a>
+                <a href="{{ url_for('report_lost') }}">Report Lost</a>
+                <a href="{{ url_for('report_found') }}">Report Found</a>
+            </div>
+
+            <div class="footer-column">
+                <h4>Resources</h4>
+                <a href="{{ url_for('how_it_works') }}">How It Works</a>
+                <a href="{{ url_for('community') }}">About</a>
+                {% if current_user %}<a href="{{ url_for('dashboard') }}">Dashboard</a>{% endif %}
+            </div>
+
+            <div class="footer-column">
+                <h4>Account</h4>
+                {% if current_user %}
+                    <a href="{{ url_for('profile') }}">Profile</a>
+                    <form action="{{ url_for('logout') }}" method="post" class="footer-logout-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="footer-logout">Log out</button>
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Login</a>
+                    <a href="{{ url_for('signup') }}">Create account</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="container footer-bottom">
+            <span>© 2026 FINDIT</span>
+            <span>Lost things. Found people.</span>
+        </div>
+        {% endif %}
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=16"></script>
+</body>
+</html>

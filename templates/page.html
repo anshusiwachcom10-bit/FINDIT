@@ -1,0 +1,502 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container page-hero-inner">
+        <div class="page-copy">
+            <span class="eyebrow">{{ page_kicker }}</span>
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_intro }}</p>
+            <div class="inline-actions">
+                {% if page_category == 'items' %}
+                    <a href="{{ url_for('report_lost') }}" class="btn btn-primary">Report Lost Item →</a>
+                    <a href="{{ url_for('report_found') }}" class="btn btn-secondary">Report Found Item</a>
+                {% elif page_category == 'report' %}
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Review saved reports →</a>
+                    <a href="{{ url_for('lost_items') }}" class="btn btn-secondary">Browse items</a>
+                {% elif page_category == 'auth' %}
+                    <a href="{{ url_for('signup', next=next_url) if page_slug == 'login' else url_for('login', next=next_url) }}" class="btn btn-primary">{{ 'Create account' if page_slug == 'login' else 'Log in' }} →</a>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">Back home</a>
+                {% elif page_category == 'dashboard' %}
+                    <a href="{{ url_for('report_lost') }}" class="btn btn-primary">Add a report →</a>
+                    <a href="{{ url_for('matches') }}" class="btn btn-secondary">View matches</a>
+                {% elif page_category == 'matches' %}
+                    <a href="{{ url_for('lost_items') }}" class="btn btn-primary">Browse all items →</a>
+                    <a href="{{ url_for('profile') }}" class="btn btn-secondary">Saved matches</a>
+                {% else %}
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">Back to home →</a>
+                    <a href="{{ url_for('report_lost') }}" class="btn btn-secondary">Start a report</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="page-hero-panel">
+            {% if page_category == 'items' %}
+                <div class="mini-stat-stack">
+                    <div class="mini-stat">
+                        <strong>{{ items|length }}</strong>
+                        <span>reports shown</span>
+                    </div>
+                    <div class="mini-stat accent">
+                        <strong>FINDIT</strong>
+                        <span>community noticeboard</span>
+                    </div>
+                </div>
+            {% elif page_category == 'report' %}
+                <div class="privacy-note">
+                    <strong>Privacy first</strong>
+                    <span>Your personal information is protected.</span>
+                </div>
+            {% elif page_category == 'auth' %}
+                <div class="auth-spotlight">
+                    <strong>Private by design</strong>
+                    <span>Your account details and reports stay protected.</span>
+                </div>
+            {% else %}
+                <div class="mini-stat-stack">
+                    <div class="mini-stat">
+                        <strong>FINDIT</strong>
+                        <span>lost &amp; found community</span>
+                    </div>
+                    <div class="mini-stat accent">
+                        <strong>Thoughtful</strong>
+                        <span>matching from real reports</span>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="container page-content">
+    {% if page_category == 'items' %}
+        <form class="filter-panel search-form" data-search-form>
+            <label class="search-label" for="item-search">Search reported items</label>
+            <div class="large-search">
+                <span class="search-prefix" aria-hidden="true">⌕</span>
+                <input id="item-search" name="q" type="search" placeholder="Search by item, category, location or description..." autocomplete="off" value="{{ request.args.get('q', '') }}">
+                <button type="submit" class="btn btn-primary search-submit">Search</button>
+                <button type="button" class="clear-search" data-clear-search aria-label="Clear search">Clear</button>
+            </div>
+            <div class="filter-row">
+                <label class="select-field" for="category-filter">
+                    <span>Category</span>
+                    <select id="category-filter" name="category">
+                        <option value="">All categories</option>
+                        {% for category in categories %}<option value="{{ category }}" {{ 'selected' if request.args.get('category') == category else '' }}>{{ category }}</option>{% endfor %}
+                    </select>
+                </label>
+                <label class="select-field" for="location-filter">
+                    <span>Location</span>
+                    <select id="location-filter" name="location">
+                        <option value="">All locations</option>
+                        {% for location in locations %}<option value="{{ location }}" {{ 'selected' if request.args.get('location') == location else '' }}>{{ location }}</option>{% endfor %}
+                    </select>
+                </label>
+                <label class="select-field" for="date-filter">
+                    <span>Date</span>
+                    <input id="date-filter" name="date" type="date" value="{{ request.args.get('date', '') }}">
+                </label>
+                <label class="select-field" for="status-filter">
+                    <span>Status</span>
+                    <select id="status-filter" name="type">
+                        <option value="">Lost &amp; found</option>
+                        <option value="lost" {{ 'selected' if request.args.get('type') == 'lost' else '' }}>Lost</option>
+                        <option value="found" {{ 'selected' if request.args.get('type') == 'found' else '' }}>Found</option>
+                    </select>
+                </label>
+                <button type="button" class="reset-filters" data-reset-filters>Reset filters</button>
+            </div>
+            <p class="results-summary" data-results-summary aria-live="polite">{{ items|length }} report{{ '' if items|length == 1 else 's' }} found</p>
+        </form>
+        <div class="inline-feedback" data-search-feedback role="status" aria-live="polite">
+            {% if filter_error %}{{ filter_error }}{% endif %}
+        </div>
+
+        <div class="editorial-grid" data-item-grid aria-live="polite">
+            {% for item in items %}
+            <article class="editorial-card item-card" data-item-card>
+                {% if item['image_url'] %}
+                    <img src="{{ item['image_url'] }}" alt="{{ item['title'] }}" loading="lazy" data-item-image>
+                {% else %}
+                    <div class="item-image-placeholder" role="img" aria-label="No photo provided"><span>FINDIT</span><small>No photo provided</small></div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="meta-row">
+                        <span class="status {{ item['type'] }}">{{ item['type']|title }}</span>
+                        <span class="date">{{ item['event_date'] or 'Date not provided' }}</span>
+                    </div>
+                    <span class="pill neutral">{{ item['category'] or 'Uncategorized' }}</span>
+                    <h3>{{ item['title'] }}</h3>
+                    <p>{{ item['location'] or 'Location not provided' }} · {{ item['description'] or 'No description provided.' }}</p>
+                    <div class="card-footer">
+                        <span class="item-status">{{ item['status']|title }}</span>
+                        {% if item['matches'] %}<strong>{{ item['matches'][0]['level'] }} · {{ item['matches'][0]['confidence'] }}%</strong>{% endif %}
+                    </div>
+                    <a href="{{ url_for('item_detail', item_id=item['id']) }}" class="text-link">View Details →</a>
+                </div>
+            </article>
+            {% else %}
+                <div class="empty-state" data-empty-state>
+                    <span class="eyebrow">Noticeboard</span>
+                    <h3>No reports found</h3>
+                    <p>Try changing your search or filters.</p>
+                    <a href="{{ url_for('report_lost') }}" class="text-link">Report a lost item →</a>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% elif page_category == 'detail' %}
+        <div class="item-detail-layout">
+            <div class="item-detail-photo">
+                {% if item['image_url'] %}
+                    <img src="{{ item['image_url'] }}" alt="{{ item['title'] }}" data-item-image>
+                {% else %}
+                    <div class="item-image-placeholder detail-placeholder" role="img" aria-label="No photo provided"><span>FINDIT</span><small>No photo provided</small></div>
+                {% endif %}
+            </div>
+            <article class="item-detail-copy">
+                <div class="meta-row">
+                    <span class="status {{ item['type'] }}">{{ item['type']|title }}</span>
+                    <span class="item-status">{{ item['status']|title }}</span>
+                </div>
+                <h2>{{ item['title'] }}</h2>
+                <p class="detail-description">{{ item['description'] or 'No description was provided.' }}</p>
+                <dl class="detail-facts">
+                    <div><dt>Category</dt><dd>{{ item['category'] or 'Not provided' }}</dd></div>
+                    <div><dt>Location</dt><dd>{{ item['location'] or 'Not provided' }}</dd></div>
+                    <div><dt>Date</dt><dd>{{ item['event_date'] or 'Not provided' }}</dd></div>
+                    <div><dt>Shared by</dt><dd>{{ item_owner['name'] if item_owner else 'FINDIT community member' }}</dd></div>
+                </dl>
+                <a href="{{ url_for('matches') if current_user else url_for('login', next=request.path) }}" class="btn btn-primary">View Potential Matches →</a>
+                <p class="privacy-note-inline">Contact details stay private. Sign in to connect through FINDIT.</p>
+            </article>
+        </div>
+        <section class="detail-matches">
+            <div class="section-heading">
+                <span class="eyebrow">Smart matching</span>
+                <h2>Potential matches</h2>
+            </div>
+            {% if matches %}
+                <div class="match-list">
+                    {% for match in matches %}
+                    <article class="potential-match-card">
+                        <div class="match-card-header">
+                            <div><span class="eyebrow small">{{ match['level'] }} · {{ match['status']|title }}</span><h3>{{ match['item']['title'] }}</h3></div>
+                            <span class="score-badge">{{ match['confidence'] }}%</span>
+                        </div>
+                        <p>{{ match['item']['location'] }} · {{ match['item']['event_date'] }}</p>
+                        <ul class="check-list compact">{% for reason in match['reasons'] %}<li>{{ reason }}</li>{% endfor %}</ul>
+                        <a href="{{ url_for('match_detail', match_id=match['id']) }}" class="btn btn-secondary">View Match →</a>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state"><h3>No potential matches yet.</h3><p>We’ll show relevant reports here as new items are added.</p></div>
+            {% endif %}
+        </section>
+
+    {% elif page_category == 'report' %}
+        <div class="form-layout">
+            <div class="form-panel">
+                <form class="report-form" data-report-form action="{{ url_for('api_create_item') }}" method="post" enctype="multipart/form-data" data-item-type="{{ 'lost' if page_slug == 'report-lost' else 'found' }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="type" value="{{ 'lost' if page_slug == 'report-lost' else 'found' }}">
+                    <label class="upload-box" for="item-image">
+                        <span>Item photo · optional</span>
+                        <strong data-image-name>Choose a clear image of the item</strong>
+                        <small>JPG, PNG, GIF or WebP · up to 16 MB</small>
+                        <input id="item-image" name="image" type="file" accept="image/png,image/jpeg,image/gif,image/webp" class="file-input">
+                    </label>
+                    <p class="inline-feedback" data-report-feedback role="status" aria-live="polite"></p>
+                    <div class="form-grid">
+                        <label>
+                            <span>Item name</span>
+                            <input type="text" name="title" placeholder="Brown leather wallet" aria-label="Item name" maxlength="160" required>
+                        </label>
+                        <label>
+                            <span>Category</span>
+                            <select name="category" aria-label="Category" required>
+                                <option value="">Choose category</option>
+                                {% for category in categories|default(['Accessories', 'Bags', 'Clothing', 'Documents', 'Electronics', 'Keys', 'Jewelry', 'Wallets', 'Other']) %}<option value="{{ category }}">{{ category }}</option>{% endfor %}
+                            </select>
+                        </label>
+                    </div>
+
+                    <label>
+                        <span>Description</span>
+                        <textarea name="description" rows="4" maxlength="1200" placeholder="Add identifying details such as color, material, or visible markings." required></textarea>
+                    </label>
+
+                    <div class="form-grid">
+                        <label>
+                            <span>{{ 'Found location' if page_slug == 'report-found' else 'Last known location' }}</span>
+                            <input type="text" name="location" placeholder="Central Market" maxlength="160" required>
+                        </label>
+                        <label>
+                            <span>{{ 'Date found' if page_slug == 'report-found' else 'Date lost' }}</span>
+                            <input type="date" name="event_date" required>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" data-submit-label>{{ 'Submit Found Report' if page_slug == 'report-found' else 'Submit Lost Report' }} →</button>
+                </form>
+                <div class="report-success" data-report-success hidden></div>
+            </div>
+
+            <aside class="side-panel">
+                <div class="panel-card">
+                    <h3>Why this works</h3>
+                    <ul class="check-list">
+                        <li>Clear item details improve matching accuracy</li>
+                        <li>Location and date help narrow the search</li>
+                        <li>Private communication keeps contact details safe</li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+
+    {% elif page_category == 'auth' %}
+        <div class="auth-shell">
+            <div class="auth-card">
+                <h2>{{ 'Welcome back' if page_slug == 'login' else 'Create your account' }}</h2>
+                <form class="auth-form" action="{{ url_for('login') if page_slug == 'login' else url_for('signup') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="next" value="{{ next_url|default('') }}">
+                    {% if page_slug == 'signup' %}
+                        <label>
+                            <span>Full name</span>
+                            <input type="text" name="name" placeholder="Avery Johnson" maxlength="100" autocomplete="name" required>
+                        </label>
+                    {% endif %}
+                    <label>
+                        <span>Email address</span>
+                        <input type="email" name="email" placeholder="name@university.edu" autocomplete="email" maxlength="254" required>
+                    </label>
+                    <label>
+                        <span>Password</span>
+                        <input type="password" name="password" placeholder="At least 8 characters" autocomplete="{{ 'current-password' if page_slug == 'login' else 'new-password' }}" minlength="8" required>
+                    </label>
+                    <button type="submit" class="btn btn-primary">{{ 'Log in' if page_slug == 'login' else 'Create account' }} →</button>
+                </form>
+            </div>
+        </div>
+
+    {% elif page_category == 'dashboard' %}
+        <div class="dashboard-shell">
+            <div class="stats-row">
+                <div class="stat-card"><strong>{{ stats['lost'] }}</strong><span>Lost Reports</span></div>
+                <div class="stat-card"><strong>{{ stats['found'] }}</strong><span>Found Reports</span></div>
+                <div class="stat-card"><strong>{{ stats['matches'] }}</strong><span>Potential Matches</span></div>
+                <div class="stat-card"><strong>{{ stats['recovered'] }}</strong><span>Recovered Items</span></div>
+            </div>
+
+            <div class="dashboard-columns">
+                <div class="panel-card">
+                    <h3>Active reports</h3>
+                    <ul class="timeline-list">
+                        {% for item in items if item['status']|lower == 'open' %}
+                        <li><a href="{{ url_for('item_detail', item_id=item['id']) }}"><strong>{{ item['title'] }}</strong><span>{{ item['type']|title }} · {{ item['location'] or 'Location not provided' }} · {{ item['event_date'] or 'Date not provided' }}</span></a></li>
+                        {% else %}
+                        <li class="timeline-empty"><span>No active reports yet. <a href="{{ url_for('report_lost') }}">Add your first report →</a></span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="panel-card">
+                    <h3>Recent matches</h3>
+                    <ul class="timeline-list">
+                        {% for match in matches[:5] %}
+                        <li><a href="{{ url_for('match_detail', match_id=match['id']) }}"><strong>{{ match['level'] }} · {{ match['confidence'] }}% · {{ match['match']['title'] }}</strong><span>{{ match['status']|title }} · {{ match['match']['location'] }} · {{ match['match']['event_date'] }}</span></a></li>
+                        {% else %}
+                        <li class="timeline-empty"><span>No potential matches yet. New reports will be compared automatically.</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="panel-card">
+                    <h3>Recent activity</h3>
+                    <ul class="timeline-list">
+                        {% for activity in recent_activity %}
+                        <li><a href="{{ url_for('item_detail', item_id=activity['id']) }}"><strong>{{ activity['title'] }}</strong><span>{{ activity['type']|title }} report · {{ activity['created_at'] }}</span></a></li>
+                        {% else %}
+                        <li class="timeline-empty"><span>Your report activity will appear here.</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    {% elif page_category == 'match_detail' %}
+        <article class="potential-match-card">
+            <div class="match-card-header">
+                <div>
+                    <span class="eyebrow small">{{ match['level'] }} · {{ match['status']|title }}</span>
+                    <h2>{{ match['score'] }}% Match</h2>
+                </div>
+                <span class="score-badge">{{ match['score'] }}%</span>
+            </div>
+            <div class="match-flow">
+                <span>Your {{ match['report']['type']|title }} report · {{ match['report']['title'] }}</span>
+                <span>↔</span>
+                <span>{{ match['match']['type']|title }} report · {{ match['match']['title'] }}</span>
+            </div>
+            <p>{{ match['match']['location'] or 'Location not provided' }} · {{ match['match']['event_date'] or 'Date not provided' }}</p>
+            <ul class="check-list compact">
+                {% for reason in match['reasons'] %}<li>{{ reason }}</li>{% endfor %}
+            </ul>
+            <form class="match-status-form" data-match-status-form action="{{ url_for('api_match_detail', match_id=match['id']) }}">
+                <label>
+                    <span>Update match status</span>
+                    <select name="status">
+                        {% for status in match_statuses %}
+                        <option value="{{ status }}" {{ 'selected' if match['status'] == status else '' }}>{{ status|title }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button type="submit" class="btn btn-secondary">Save status</button>
+                <p class="inline-feedback" data-match-status-feedback role="status" aria-live="polite"></p>
+            </form>
+            <a href="{{ url_for('item_detail', item_id=match['match']['id']) }}" class="text-link">View matched report →</a>
+        </article>
+
+    {% elif page_category == 'matches' %}
+        <div class="match-list">
+            {% for match in matches %}
+            <article class="potential-match-card">
+                <div class="match-card-header">
+                    <div>
+                        <span class="eyebrow small">Your {{ match['report']['type'] }} report · {{ match['level'] }} · {{ match['status']|title }}</span>
+                        <h3>{{ match['match']['title'] }}</h3>
+                    </div>
+                    <span class="score-badge">{{ match['confidence'] }}%</span>
+                </div>
+                <div class="match-flow">
+                    <span>{{ match['report']['title'] }}</span>
+                    <span>↓</span>
+                    <span>{{ match['match']['title'] }}</span>
+                    <span>↓</span>
+                    <span>{{ match['match']['location'] }} · {{ match['match']['event_date'] }}</span>
+                </div>
+                <ul class="check-list compact">
+                    {% for reason in match['reasons'] %}<li>{{ reason }}</li>{% endfor %}
+                </ul>
+                <a href="{{ url_for('match_detail', match_id=match['id']) }}" class="btn btn-secondary">View Match →</a>
+            </article>
+            {% else %}
+            <div class="empty-state"><h3>No potential matches yet.</h3><p>We’ll compare reports as new items are added.</p><a href="{{ url_for('lost_items') }}" class="text-link">Browse reported items →</a></div>
+            {% endfor %}
+        </div>
+
+    {% elif page_category == 'account' %}
+        <div class="account-layout">
+            <aside class="account-sidebar panel-card">
+                <h3>Account</h3>
+                <nav class="account-nav">
+                    <a class="{{ 'active' if page_slug == 'profile' else '' }}" href="{{ url_for('profile') }}">Profile</a>
+                    <a href="{{ url_for('notifications') }}">Notifications</a>
+                    <a href="{{ url_for('dashboard') }}">My reports</a>
+                    <a href="{{ url_for('matches') }}">Matches</a>
+                    <form action="{{ url_for('logout') }}" method="post" class="account-nav-logout">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit">Log out</button>
+                    </form>
+                </nav>
+            </aside>
+            <div class="account-main">
+                {% if page_slug == 'profile' %}
+                <div class="panel-card account-panel">
+                    <h3>Profile details</h3>
+                    <div class="profile-row"><span>Name</span><strong>{{ current_user['name'] }}</strong></div>
+                    <div class="profile-row"><span>Email</span><strong>{{ current_user['email'] }}</strong></div>
+                    <div class="profile-row"><span>Member since</span><strong>{{ current_user['created_at'] }}</strong></div>
+                </div>
+                <div class="panel-card account-panel">
+                    <h3>My lost reports</h3>
+                    <ul class="timeline-list">
+                        {% for item in items if item['type'] == 'lost' %}
+                        <li><a href="{{ url_for('item_detail', item_id=item['id']) }}"><strong>{{ item['title'] }}</strong><span>{{ item['status']|title }} · {{ item['location'] }} · {{ item['event_date'] }}</span></a></li>
+                        {% else %}<li class="timeline-empty"><span>No lost reports yet. <a href="{{ url_for('report_lost') }}">Report a lost item →</a></span></li>{% endfor %}
+                    </ul>
+                </div>
+                <div class="panel-card account-panel">
+                    <h3>My found reports</h3>
+                    <ul class="timeline-list">
+                        {% for item in items if item['type'] == 'found' %}
+                        <li><a href="{{ url_for('item_detail', item_id=item['id']) }}"><strong>{{ item['title'] }}</strong><span>{{ item['status']|title }} · {{ item['location'] }} · {{ item['event_date'] }}</span></a></li>
+                        {% else %}<li class="timeline-empty"><span>No found reports yet. <a href="{{ url_for('report_found') }}">Report a found item →</a></span></li>{% endfor %}
+                    </ul>
+                </div>
+                <div class="panel-card account-panel">
+                    <h3>Potential matches</h3>
+                    <ul class="timeline-list">
+                        {% for match in matches[:5] %}
+                        <li><a href="{{ url_for('match_detail', match_id=match['id']) }}"><strong>{{ match['level'] }} · {{ match['confidence'] }}% · {{ match['match']['title'] }}</strong><span>{{ match['status']|title }} · {{ match['match']['location'] }} · {{ match['match']['event_date'] }}</span></a></li>
+                        {% else %}<li class="timeline-empty"><span>No potential matches yet.</span></li>{% endfor %}
+                    </ul>
+                </div>
+                <form action="{{ url_for('logout') }}" method="post" class="account-logout">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-secondary">Log out</button>
+                </form>
+                {% else %}
+                <div class="panel-card account-panel">
+                    <h3>Your notifications</h3>
+                    <ul class="timeline-list">
+                        {% for notification in notifications %}
+                        <li><strong>{{ notification['title'] }}</strong><span>{{ notification['message'] }} · {{ notification['created_at'] }}</span></li>
+                        {% else %}<li class="timeline-empty"><span>No notifications yet.</span></li>{% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    {% elif page_category == 'community' %}
+        <div class="story-grid">
+            <article class="story-card panel-card">
+                <span class="eyebrow small">A clear report</span>
+                <h3>Share the details that matter.</h3>
+                <p>A useful description, image, date, and location help others recognize an item without exposing private contact information.</p>
+            </article>
+            <article class="story-card panel-card">
+                <span class="eyebrow small">Thoughtful matching</span>
+                <h3>Compare real report details.</h3>
+                <p>FINDIT highlights shared category, words, location, and date signals between open lost and found reports.</p>
+            </article>
+            <article class="story-card panel-card">
+                <span class="eyebrow small">Safe return</span>
+                <h3>Keep personal information private.</h3>
+                <p>Contact details are not shown on public item pages. Sign in to manage reports and receive private match notifications.</p>
+            </article>
+        </div>
+
+    {% elif page_category == 'how' %}
+        <div class="steps-grid">
+            <article class="step-card">
+                <span class="step-number">01</span>
+                <h3>Report</h3>
+                <p>Tell FINDIT what you lost or found with details, photos, and a location.</p>
+            </article>
+            <article class="step-card">
+                <span class="step-number">02</span>
+                <h3>Match</h3>
+                <p>We compare the description, location, date, and unique identifying details.</p>
+            </article>
+            <article class="step-card">
+                <span class="step-number">03</span>
+                <h3>Connect</h3>
+                <p>Receive a private alert when a credible match is identified.</p>
+            </article>
+            <article class="step-card">
+                <span class="step-number">04</span>
+                <h3>Reunite</h3>
+                <p>Meet safely, verify details, and help the item return home.</p>
+            </article>
+        </div>
+
+    {% elif page_category == 'admin' %}
+        <div class="admin-grid">
+            <div class="empty-state"><h3>No admin reporting tools are configured.</h3><p>Administrative workflows are not part of the current FINDIT application.</p></div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

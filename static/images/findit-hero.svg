@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" role="img" aria-labelledby="title desc">
+  <title id="title">FINDIT lost and found still life</title>
+  <desc id="desc">A warm editorial illustration of a satchel, keys, and a wallet on a café table.</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#efe0ce"/>
+      <stop offset="1" stop-color="#d9b999"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#9e6744"/>
+      <stop offset="1" stop-color="#70452f"/>
+    </linearGradient>
+    <linearGradient id="bag" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#69452f"/>
+      <stop offset="1" stop-color="#3b2415"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="16"/>
+      <feOffset dy="14"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".24"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="900" height="720" fill="url(#wall)"/>
+  <circle cx="720" cy="150" r="120" fill="#fff9f1" opacity=".25"/>
+  <path d="M0 465c165-46 282-25 435 5s295 35 465-4v254H0z" fill="url(#table)"/>
+  <path d="M0 498c180-35 330 25 485 14s286-51 415-25" fill="none" stroke="#c58a5a" stroke-width="3" opacity=".38"/>
+  <g filter="url(#shadow)">
+    <path d="M264 275c0-81 64-145 145-145s145 64 145 145" fill="none" stroke="#3b2415" stroke-width="29" stroke-linecap="round"/>
+    <path d="M218 279c0-22 18-40 40-40h304c22 0 40 18 40 40v241c0 31-25 56-56 56H274c-31 0-56-25-56-56z" fill="url(#bag)"/>
+    <path d="M218 318h384v48H218z" fill="#8e6041"/>
+    <rect x="343" y="400" width="132" height="111" rx="14" fill="#a66a3f"/>
+    <path d="M365 400c0-27 20-48 45-48s45 21 45 48" fill="none" stroke="#d9ad82" stroke-width="12"/>
+    <circle cx="408" cy="455" r="7" fill="#f6ebdd"/>
+  </g>
+  <g filter="url(#shadow)" transform="rotate(-8 650 488)">
+    <rect x="602" y="429" width="182" height="111" rx="17" fill="#c58a5a"/>
+    <path d="M620 458h145" stroke="#f6ebdd" stroke-width="5" opacity=".8"/>
+    <path d="M620 500h88" stroke="#6a422c" stroke-width="5" opacity=".55"/>
+  </g>
+  <g transform="translate(116 444) rotate(13)">
+    <circle cx="0" cy="0" r="20" fill="none" stroke="#e5c59f" stroke-width="8"/>
+    <path d="M20 4l128 43-10 16-21-7-9 21-18-8 9-21-29-10-8 19-17-7 8-20-28-10-7 17-17-7 7-18-8-3z" fill="#e5c59f"/>
+  </g>
+  <text x="64" y="92" fill="#5c3822" font-family="Georgia,serif" font-size="18" letter-spacing="4">FINDIT · EVERY DETAIL MATTERS</text>
+</svg>
